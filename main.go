@@ -6,9 +6,10 @@ import (
 
 func main() {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
+	// Health check rout  
+	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "pong",
+			"health": true,
 		})
 	})
 	const PORT = ":5000"

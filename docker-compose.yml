@@ -1,0 +1,12 @@
+version: "3.7"
+services:
+    hltvdata:
+        container_name: hltvdata
+        build: ./
+        ports:
+            - "127.0.0.1:5000:5000"
+        # depends_on:
+        #     - bigger-db
+        volumes:
+            - ./:/app
+#https://askubuntu.com/questions/773446/unable-to-connect-via-mysql-workbench-to-localhost-in-ubuntu-16-04-passwordless
