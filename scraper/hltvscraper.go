@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gocolly/colly"
+	"github.com/parnurzeal/gorequest"
 )
 
 // CSGOteam holds the information for the csgo team
@@ -24,6 +25,21 @@ type CSGOteam struct {
 // ScrapeHltvTeams scrapes the top teams, needs automation currently.
 func ScrapeHltvTeams() []CSGOteam {
 	url := "https://www.hltv.org/ranking/teams"
+	return scrapeHltvTeamsByURL(url)
+}
+
+// HltvTest function for invalid url
+func HltvTest() []CSGOteam {
+	url := "https://www.hltv.org/ranking/teams/2018/december/30"
+	request := gorequest.New()
+	agent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
+	resp, _, _ := request.Get(url).Set("User-Agent", agent).End()
+	fmt.Println(resp.StatusCode)
+	return scrapeHltvTeamsByURL(url)
+}
+
+// main function
+func scrapeHltvTeamsByURL(url string) []CSGOteam {
 	c := colly.NewCollector()
 	var header = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
 	colly.Async(true)
@@ -60,8 +76,23 @@ func ScrapeHltvTeams() []CSGOteam {
 			}
 			csgoteams = append(csgoteams, team)
 		})
-		// Hard assign the players
 	})
 	c.Visit(url)
 	return csgoteams
+}
+
+// RankingTraverse traverses
+func RankingTraverse() {
+	start := time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)
+	now := time.Now()
+	fmt.Println(start.AddDate(0, 0, 1))
+	fmt.Println(start)
+	for start.Before(now) {
+		fmt.Println(start)
+		start = start.AddDate(0, 0, 1)
+		day := strconv.Itoa(start.Day())
+		year := strconv.Itoa(start.Year())
+		url := fmt.Sprintf("https://www.hltv.org/ranking/teams/%s/%s/%s", year, start.Month(), day)
+		fmt.Println(url)
+	}
 }
