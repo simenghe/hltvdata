@@ -43,8 +43,13 @@ func testRequest(url string) bool {
 	request := gorequest.New()
 	agent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
 	resp, _, _ := request.Get(url).Set("User-Agent", agent).End()
-	fmt.Println(resp.StatusCode)
 	return resp.StatusCode == 200
+}
+func testRequestAsync(url string, c chan bool) {
+	request := gorequest.New()
+	agent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
+	resp, _, _ := request.Get(url).Set("User-Agent", agent).End()
+	c <- resp.StatusCode == 200
 }
 
 // main function
@@ -90,12 +95,16 @@ func scrapeHltvTeamsByURL(url string) []CSGOteam {
 	return csgoteams
 }
 
-// RankingTraverse traverses
+// RankingTraverse traverses, currently no sync
 func RankingTraverse() {
+	bench := time.Now()
 	start := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := time.Now()
+	// THe working URLS in the end
 	var workingUrls []string
+	var i int = 0
 	for start.Before(now) {
+		i++
 		day := strconv.Itoa(start.Day())
 		month := strings.ToLower(start.Month().String())
 		year := strconv.Itoa(start.Year())
@@ -109,4 +118,31 @@ func RankingTraverse() {
 		start = start.AddDate(0, 0, 1)
 	}
 	fmt.Println(workingUrls)
+	fmt.Println(time.Since(bench))
+}
+
+// RankingTraverseAsync traverses, currently no sync
+func RankingTraverseAsync() {
+	bench := time.Now()
+	c := make(chan bool)
+	start := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
+	now := time.Now()
+	// THe working URLS in the end
+	var workingUrls []string
+	for start.Before(now) {
+		day := strconv.Itoa(start.Day())
+		month := strings.ToLower(start.Month().String())
+		year := strconv.Itoa(start.Year())
+		url := fmt.Sprintf("https://www.hltv.org/ranking/teams/%s/%s/%s", year, month, day)
+		go testRequestAsync(url, c)
+		success := <-c
+		if success {
+			workingUrls = append(workingUrls, url)
+			fmt.Println(url)
+		}
+		// Increment Day
+		start = start.AddDate(0, 0, 1)
+	}
+	fmt.Println(workingUrls)
+	fmt.Println(time.Since(bench))
 }

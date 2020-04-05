@@ -27,6 +27,10 @@ func main() {
 		go scraper.RankingTraverse()
 		c.JSON(http.StatusOK, "loss")
 	})
+	r.GET("/testasync", func(c *gin.Context) {
+		go scraper.RankingTraverseAsync()
+		c.JSON(http.StatusOK, "asyncloss")
+	})
 	const PORT = ":5000"
 	r.Run(PORT)
 }
