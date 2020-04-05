@@ -38,6 +38,18 @@ func HltvTest() []CSGOteam {
 	return scrapeHltvTeamsByURL(url)
 }
 
+// function to test if Url -
+func testRequest(url string) bool {
+	request := gorequest.New()
+	agent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
+	resp, _, _ := request.Get(url).Set("User-Agent", agent).End()
+	fmt.Println(resp.StatusCode)
+	if resp.StatusCode != 200 {
+		return false
+	}
+	return true
+}
+
 // main function
 func scrapeHltvTeamsByURL(url string) []CSGOteam {
 	c := colly.NewCollector()
