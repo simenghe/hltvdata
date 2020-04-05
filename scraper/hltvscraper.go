@@ -44,10 +44,7 @@ func testRequest(url string) bool {
 	agent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
 	resp, _, _ := request.Get(url).Set("User-Agent", agent).End()
 	fmt.Println(resp.StatusCode)
-	if resp.StatusCode != 200 {
-		return false
-	}
-	return true
+	return resp.StatusCode == 200
 }
 
 // main function
@@ -95,16 +92,21 @@ func scrapeHltvTeamsByURL(url string) []CSGOteam {
 
 // RankingTraverse traverses
 func RankingTraverse() {
-	start := time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)
+	start := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := time.Now()
-	fmt.Println(start.AddDate(0, 0, 1))
-	fmt.Println(start)
+	var workingUrls []string
 	for start.Before(now) {
-		fmt.Println(start)
-		start = start.AddDate(0, 0, 1)
 		day := strconv.Itoa(start.Day())
+		month := strings.ToLower(start.Month().String())
 		year := strconv.Itoa(start.Year())
-		url := fmt.Sprintf("https://www.hltv.org/ranking/teams/%s/%s/%s", year, start.Month(), day)
-		fmt.Println(url)
+		url := fmt.Sprintf("https://www.hltv.org/ranking/teams/%s/%s/%s", year, month, day)
+		success := testRequest(url)
+		if success {
+			workingUrls = append(workingUrls, url)
+			fmt.Println(url)
+		}
+		// Increment Day
+		start = start.AddDate(0, 0, 1)
 	}
+	fmt.Println(workingUrls)
 }
