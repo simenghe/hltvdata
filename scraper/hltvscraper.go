@@ -148,7 +148,6 @@ func RankingTraverseAsync() []string {
 			fmt.Println(curSite.status)
 		}
 	}
-	fmt.Println(workingUrls)
 	fmt.Println(time.Since(bench))
 	return workingUrls
 }
