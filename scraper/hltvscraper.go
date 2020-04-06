@@ -11,6 +11,8 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
+const agent = "Mozilla/4.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
+
 // CSGOteam holds the information for the csgo team
 type CSGOteam struct {
 	ID         int    `json:"ID"`
@@ -20,6 +22,10 @@ type CSGOteam struct {
 	URL        string `json:"url"`
 	Date       string `json:"date"`
 	PlayerList string `json:"playerList"`
+}
+type urlStatus struct {
+	url    string
+	status bool
 }
 
 // ScrapeHltvTeams scrapes the top teams, needs automation currently.
@@ -32,7 +38,6 @@ func ScrapeHltvTeams() []CSGOteam {
 func HltvTest() []CSGOteam {
 	url := "https://www.hltv.org/ranking/teams/2018/december/30"
 	request := gorequest.New()
-	agent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
 	resp, _, _ := request.Get(url).Set("User-Agent", agent).End()
 	fmt.Println(resp.StatusCode)
 	return scrapeHltvTeamsByURL(url)
@@ -41,25 +46,22 @@ func HltvTest() []CSGOteam {
 // function to test if Url -
 func testRequest(url string) bool {
 	request := gorequest.New()
-	agent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
 	resp, _, _ := request.Get(url).Set("User-Agent", agent).End()
 	return resp.StatusCode == 200
 }
-func testRequestAsync(url string, c chan bool) {
+func testRequestAsync(url string, c chan urlStatus) {
 	request := gorequest.New()
-	agent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
 	resp, _, _ := request.Get(url).Set("User-Agent", agent).End()
-	c <- resp.StatusCode == 200
+	c <- urlStatus{url: url, status: resp.StatusCode == 200}
 }
 
 // main function
 func scrapeHltvTeamsByURL(url string) []CSGOteam {
 	c := colly.NewCollector()
-	var header = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1913.47 Safari/537.36"
 	colly.Async(true)
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting", r.URL)
-		r.Headers.Set("User-Agent", header)
+		r.Headers.Set("User-Agent", agent)
 
 	})
 	var csgoteams = []CSGOteam{}
@@ -102,9 +104,7 @@ func RankingTraverse() {
 	now := time.Now()
 	// THe working URLS in the end
 	var workingUrls []string
-	var i int = 0
 	for start.Before(now) {
-		i++
 		day := strconv.Itoa(start.Day())
 		month := strings.ToLower(start.Month().String())
 		year := strconv.Itoa(start.Year())
@@ -117,16 +117,17 @@ func RankingTraverse() {
 		// Increment Day
 		start = start.AddDate(0, 0, 1)
 	}
-	fmt.Println(workingUrls)
 	fmt.Println(time.Since(bench))
+	fmt.Println(workingUrls)
 }
 
 // RankingTraverseAsync traverses, currently no sync
-func RankingTraverseAsync() {
+func RankingTraverseAsync() []string {
 	bench := time.Now()
-	c := make(chan bool)
+	c := make(chan urlStatus)
 	start := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := time.Now()
+	var urlCount int = 0
 	// THe working URLS in the end
 	var workingUrls []string
 	for start.Before(now) {
@@ -135,14 +136,19 @@ func RankingTraverseAsync() {
 		year := strconv.Itoa(start.Year())
 		url := fmt.Sprintf("https://www.hltv.org/ranking/teams/%s/%s/%s", year, month, day)
 		go testRequestAsync(url, c)
-		success := <-c
-		if success {
-			workingUrls = append(workingUrls, url)
-			fmt.Println(url)
-		}
+		time.Sleep(time.Millisecond * 100)
 		// Increment Day
 		start = start.AddDate(0, 0, 1)
+		urlCount++
+	}
+	for i := 0; i < urlCount; i++ {
+		curSite := <-c
+		if curSite.status {
+			workingUrls = append(workingUrls, curSite.url)
+			fmt.Println(curSite.status)
+		}
 	}
 	fmt.Println(workingUrls)
 	fmt.Println(time.Since(bench))
+	return workingUrls
 }
