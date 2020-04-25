@@ -14,13 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// URLStruct struct of urllist
-var URLStruct struct {
-	URLs       []string
-	TimeStamp  time.Time
-	ListLength int
-}
-
 // URI mongodb url
 var URI = fmt.Sprintf("mongodb+srv://%s:%s@hltvdata-160we.mongodb.net/test?retryWrites=true&w=majority", os.Getenv("MONGODB_USER"), os.Getenv("MONGODB_PASSWORD"))
 
@@ -57,6 +50,12 @@ func UpdateHLTVURLS() time.Duration {
 // GetHLTVURLS returns the url list from database
 func GetHLTVURLS() time.Duration {
 	bench := time.Now()
+	// URLStruct struct of urllist
+	var URLStruct struct {
+		URLs       []string
+		TimeStamp  time.Time
+		ListLength int
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(
@@ -70,6 +69,7 @@ func GetHLTVURLS() time.Duration {
 		log.Fatal(err)
 	}
 	collection := client.Database("hltvdata").Collection("urls")
+	collection.FindOne(ctx, bson.M{}.Decode(&URLStruct))
 	if error != nil {
 		log.Fatal(err)
 	}
