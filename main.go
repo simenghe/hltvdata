@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
 func main() {
 	r := gin.Default()
 	// Health check rout
@@ -29,10 +30,16 @@ func main() {
 	r.GET("/testasync", func(c *gin.Context) {
 		c.JSON(http.StatusOK, scraper.RankingTraverseAsync())
 	})
-	r.GET("/testdb", func(c *gin.Context) {
+	r.GET("/updatehltv", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"success":  true,
 			"duration": UpdateHLTVURLS().Seconds(),
+		})
+	})
+	r.GET("/gethltv", func(c *gin.Context) {
+		GetHLTVURLS()
+		c.JSON(http.StatusOK,gin.H{
+			"success": true,
 		})
 	})
 	r.GET(("/urls"), func(c *gin.Context) {

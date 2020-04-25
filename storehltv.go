@@ -14,10 +14,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
+// URLStruct struct of urllist
+var URLStruct struct {
+	URLs       []string
+	TimeStamp  time.Time
+	ListLength int
+}
+
+// URI mongodb url
+var URI = fmt.Sprintf("mongodb+srv://%s:%s@hltvdata-160we.mongodb.net/test?retryWrites=true&w=majority", os.Getenv("MONGODB_USER"), os.Getenv("MONGODB_PASSWORD"))
+
 // UpdateHLTVURLS tries updating the hltv ranking URLs
 func UpdateHLTVURLS() time.Duration {
 	bench := time.Now()
-	URI := fmt.Sprintf("mongodb+srv://%s:%s@hltvdata-160we.mongodb.net/test?retryWrites=true&w=majority", os.Getenv("MONGODB_USER"), os.Getenv("MONGODB_PASSWORD"))
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(
@@ -43,7 +53,26 @@ func UpdateHLTVURLS() time.Duration {
 	// Return the time taken to run this operation.
 	return time.Since(bench)
 }
-// GetHLTVURLS returns the url list from database
-func GetHLTVURLS(){
 
+// GetHLTVURLS returns the url list from database
+func GetHLTVURLS() time.Duration {
+	bench := time.Now()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(
+		URI,
+	))
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		log.Fatal(err)
+	}
+	collection := client.Database("hltvdata").Collection("urls")
+	if error != nil {
+		log.Fatal(err)
+	}
+	// Return the time taken to run this operation.
+	return time.Since(bench)
 }
