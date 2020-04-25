@@ -2,3 +2,5 @@ main
 ./main
 hltvdata
 ./hltvdata
+.env
+/.env

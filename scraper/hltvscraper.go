@@ -125,7 +125,7 @@ func RankingTraverse() {
 func RankingTraverseAsync() []string {
 	bench := time.Now()
 	c := make(chan urlStatus)
-	start := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
+	start := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := time.Now()
 	var urlCount int = 0
 	// THe working URLS in the end
@@ -136,16 +136,17 @@ func RankingTraverseAsync() []string {
 		year := strconv.Itoa(start.Year())
 		url := fmt.Sprintf("https://www.hltv.org/ranking/teams/%s/%s/%s", year, month, day)
 		go testRequestAsync(url, c)
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 80)
 		// Increment Day
 		start = start.AddDate(0, 0, 1)
 		urlCount++
 	}
+	// Exhaust the channel
 	for i := 0; i < urlCount; i++ {
 		curSite := <-c
 		if curSite.status {
 			workingUrls = append(workingUrls, curSite.url)
-			fmt.Println(curSite.status)
+			// fmt.Println(curSite.status)
 		}
 	}
 	fmt.Println(time.Since(bench))
