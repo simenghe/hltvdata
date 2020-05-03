@@ -53,7 +53,7 @@ func testRequestAsync(url string, c chan urlStatus) {
 	c <- urlStatus{url: url, status: resp.StatusCode == 200}
 }
 
-// main function
+// scraping function
 func scrapeHltvTeamsByURL(url string) []CSGOteam {
 	c := colly.NewCollector()
 	colly.Async(true)
@@ -93,6 +93,48 @@ func scrapeHltvTeamsByURL(url string) []CSGOteam {
 	})
 	c.Visit(url)
 	return csgoteams
+}
+
+// ScrapeHltvTeamsByURLAsync scrapes the rankings through channel
+func ScrapeHltvTeamsByURLAsync(url string, csChannel chan []CSGOteam) {
+	c := colly.NewCollector()
+	colly.Async(true)
+	c.OnRequest(func(r *colly.Request) {
+		// fmt.Println("Visiting", r.URL)
+		r.Headers.Set("User-Agent", agent)
+
+	})
+	var csgoteams = []CSGOteam{}
+	c.OnHTML("div.ranked-team", func(e *colly.HTMLElement) {
+		e.ForEach("div.ranking-header", func(_ int, e *colly.HTMLElement) {
+			playerString := e.ChildText("div.playersLine")
+			players := strings.Split(playerString, "\n")
+			for i := range players {
+				players[i] = strings.TrimSpace(players[i])
+			}
+			const layoutISO = "2006-01-02" // Format the date for golang
+			ranking, err := strconv.Atoi(strings.ReplaceAll(e.ChildText("span.position"), "#", ""))
+			if err != nil {
+				ranking = 0
+			}
+			// Format the points
+			re := regexp.MustCompile("[0-9]+")
+			points, err := strconv.Atoi((re.FindAllString(e.ChildText("span.points"), 1)[0]))
+			if err != nil {
+				points = 0
+			}
+			var team = CSGOteam{
+				TeamName:   e.ChildText("span.name"),
+				Ranking:    ranking,
+				Points:     points,
+				PlayerList: players,
+				Date:       time.Now().Format(layoutISO),
+			}
+			csgoteams = append(csgoteams, team)
+		})
+	})
+	c.Visit(url)
+	csChannel <- csgoteams
 }
 
 // RankingTraverse traverses, currently no sync

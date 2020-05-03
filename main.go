@@ -31,13 +31,15 @@ func main() {
 	r.GET("/testasync", func(c *gin.Context) {
 		c.JSON(http.StatusOK, scraper.RankingTraverseAsync())
 	})
-	r.GET("/updatehltv", func(c *gin.Context) {
+	// Adds a document, with new hltv urls
+	r.GET("/updatehltvurls", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"success":  true,
 			"duration": UpdateHLTVURLS().Seconds(),
 		})
 	})
-	r.GET("/gethltv", func(c *gin.Context) {
+	// Gets latest URL list
+	r.GET("/gethltvurls", func(c *gin.Context) {
 		urlObj, duration := GetHLTVURLS()
 		c.JSON(http.StatusOK, gin.H{
 			"duration":  duration,
@@ -45,10 +47,9 @@ func main() {
 			"timestamp": urlObj.TimeStamp,
 		})
 	})
-	r.GET(("/urls"), func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"man": "cane",
-		})
+	r.GET("/updatehltvrankings", func(c *gin.Context) {
+
+		c.JSON(http.StatusOK, UpdateHLTVRankings())
 	})
 	const PORT = ":5000"
 	r.Run(PORT)

@@ -74,17 +74,44 @@ func GetHLTVURLS() (URLStruct, time.Duration) {
 		log.Fatal(err)
 	}
 	collection := client.Database("hltvdata").Collection("urls")
-	
+
 	// Options to setup the query to save the latest one
 	opts := options.FindOne()
 	opts.SetSort(bson.D{{"timestamp", -1}})
 	error := collection.FindOne(ctx, bson.M{}, opts).Decode(&urlObj)
-	// cursor, error := collection.Find(ctx, bson.M{"$natural": -1})
-	// fmt.Println(cursor)
 	fmt.Println(urlObj)
 	if error != nil {
 		log.Fatal(err)
 	}
 	// Return the time taken to run this operation.
 	return urlObj, time.Since(bench)
+}
+
+// HLTVRanking stores multiple lists of rankings.
+type HLTVRanking struct {
+	CSGOTeams []scraper.CSGOteam
+	Timestamp time.Time
+	URL       string
+}
+
+// UpdateHLTVRankings lists off a range of rankings through time
+func UpdateHLTVRankings() []HLTVRanking {
+	// Grab HLTVURLS
+	urlObj, _ := GetHLTVURLS()
+	c := make(chan []scraper.CSGOteam)
+	urlCount := 0
+	for _, s := range urlObj.URLS {
+		go scraper.ScrapeHltvTeamsByURLAsync(s, c)
+		// time.Sleep(time.Millisecond * 80)
+		urlCount++
+	}
+	HLTVRankingCollection := make([]HLTVRanking, urlCount)
+	for i, s := range urlObj.URLS {
+		HLTVRankingCollection[i] = HLTVRanking{
+			CSGOTeams: <-c, // exhaust the channel
+			Timestamp: time.Now(),
+			URL:       s,
+		}
+	}
+	return HLTVRankingCollection
 }
