@@ -74,7 +74,8 @@ func GetHLTVURLS() (URLStruct, time.Duration) {
 		log.Fatal(err)
 	}
 	collection := client.Database("hltvdata").Collection("urls")
-
+	
+	// Options to setup the query to save the latest one
 	opts := options.FindOne()
 	opts.SetSort(bson.D{{"timestamp", -1}})
 	error := collection.FindOne(ctx, bson.M{}, opts).Decode(&urlObj)
