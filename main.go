@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	// Routes defined here.
 	r := gin.Default()
 	// Health check rout
 	r.GET("/health", func(c *gin.Context) {
@@ -37,9 +38,11 @@ func main() {
 		})
 	})
 	r.GET("/gethltv", func(c *gin.Context) {
-		GetHLTVURLS()
-		c.JSON(http.StatusOK,gin.H{
-			"success": true,
+		urlObj, duration := GetHLTVURLS()
+		c.JSON(http.StatusOK, gin.H{
+			"duration":  duration,
+			"urlList":   urlObj.URLS,
+			"timestamp": urlObj.TimeStamp,
 		})
 	})
 	r.GET(("/urls"), func(c *gin.Context) {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -47,15 +48,19 @@ func UpdateHLTVURLS() time.Duration {
 	return time.Since(bench)
 }
 
+// URLStruct get the urldata
+type URLStruct struct {
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	URLS       []string           `bson:"urlList,omitempty"`
+	TimeStamp  time.Time          `bson:"timestamp,omitempty"`
+	ListLength int                `bson:"listLength,omitempty"`
+}
+
 // GetHLTVURLS returns the url list from database
-func GetHLTVURLS() time.Duration {
+func GetHLTVURLS() (URLStruct, time.Duration) {
 	bench := time.Now()
 	// URLStruct struct of urllist
-	var URLStruct struct {
-		URLs       []string
-		TimeStamp  time.Time
-		ListLength int
-	}
+	var urlObj URLStruct
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(
@@ -69,10 +74,16 @@ func GetHLTVURLS() time.Duration {
 		log.Fatal(err)
 	}
 	collection := client.Database("hltvdata").Collection("urls")
-	collection.FindOne(ctx, bson.M{}.Decode(&URLStruct))
+
+	opts := options.FindOne()
+	opts.SetSort(bson.D{{"timestamp", -1}})
+	error := collection.FindOne(ctx, bson.M{}, opts).Decode(&urlObj)
+	// cursor, error := collection.Find(ctx, bson.M{"$natural": -1})
+	// fmt.Println(cursor)
+	fmt.Println(urlObj)
 	if error != nil {
 		log.Fatal(err)
 	}
 	// Return the time taken to run this operation.
-	return time.Since(bench)
+	return urlObj, time.Since(bench)
 }

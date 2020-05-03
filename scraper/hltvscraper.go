@@ -15,13 +15,11 @@ const agent = "Mozilla/4.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36
 
 // CSGOteam holds the information for the csgo team
 type CSGOteam struct {
-	ID         int    `json:"ID"`
-	TeamName   string `json:"teamName"`
-	Points     int    `json:"points"` // Points need to be int
-	Ranking    int    `json:"ranking"`
-	URL        string `json:"url"`
-	Date       string `json:"date"`
-	PlayerList string `json:"playerList"`
+	TeamName   string   `json:"teamName"`
+	Points     int      `json:"points"` // Points need to be int
+	Ranking    int      `json:"ranking"`
+	Date       string   `json:"date"`
+	PlayerList []string `json:"playerList"`
 }
 type urlStatus struct {
 	url    string
@@ -87,7 +85,7 @@ func scrapeHltvTeamsByURL(url string) []CSGOteam {
 				TeamName:   e.ChildText("span.name"),
 				Ranking:    ranking,
 				Points:     points,
-				PlayerList: strings.Join(players, " "),
+				PlayerList: players,
 				Date:       time.Now().Format(layoutISO),
 			}
 			csgoteams = append(csgoteams, team)
@@ -125,7 +123,7 @@ func RankingTraverse() {
 func RankingTraverseAsync() []string {
 	bench := time.Now()
 	c := make(chan urlStatus)
-	start := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	start := time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := time.Now()
 	var urlCount int = 0
 	// THe working URLS in the end
