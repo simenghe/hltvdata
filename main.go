@@ -1,6 +1,7 @@
 package main
 
 import (
+	"hltvdata/plot"
 	"hltvdata/scraper"
 	"net/http"
 
@@ -50,6 +51,12 @@ func main() {
 	r.GET("/updatehltvrankings", func(c *gin.Context) {
 
 		c.JSON(http.StatusOK, UpdateHLTVRankings())
+	})
+	r.GET("/plot", func(c *gin.Context) {
+		plot.TestPlot()
+		c.JSON(http.StatusOK,gin.H{
+			"Imagining" : "Loss",
+		})
 	})
 	const PORT = ":5000"
 	r.Run(PORT)
