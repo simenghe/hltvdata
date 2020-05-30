@@ -54,8 +54,8 @@ func main() {
 	})
 	r.GET("/plot", func(c *gin.Context) {
 		plot.TestPlot()
-		c.JSON(http.StatusOK,gin.H{
-			"Imagining" : "Loss",
+		c.JSON(http.StatusOK, gin.H{
+			"Imagining": "Loss",
 		})
 	})
 	const PORT = ":5000"
