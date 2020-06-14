@@ -2,5 +2,7 @@ main
 ./main
 hltvdata
 ./hltvdata
+app.yaml
 .env
+env_variables.yaml
 /.env

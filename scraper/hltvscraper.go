@@ -137,32 +137,9 @@ func ScrapeHltvTeamsByURLAsync(url string, csChannel chan []CSGOteam) {
 	csChannel <- csgoteams
 }
 
-// RankingTraverse traverses, currently no sync
-func RankingTraverse() {
-	bench := time.Now()
-	start := time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC)
-	now := time.Now()
-	// THe working URLS in the end
-	var workingUrls []string
-	for start.Before(now) {
-		day := strconv.Itoa(start.Day())
-		month := strings.ToLower(start.Month().String())
-		year := strconv.Itoa(start.Year())
-		url := fmt.Sprintf("https://www.hltv.org/ranking/teams/%s/%s/%s", year, month, day)
-		success := testRequest(url)
-		if success {
-			workingUrls = append(workingUrls, url)
-			fmt.Println(url)
-		}
-		// Increment Day
-		start = start.AddDate(0, 0, 1)
-	}
-	fmt.Println(time.Since(bench))
-	fmt.Println(workingUrls)
-}
 
-// RankingTraverseAsync traverses, currently no sync
-func RankingTraverseAsync() []string {
+// URLTraverseAsync traverses
+func URLTraverseAsync() []string {
 	bench := time.Now()
 	c := make(chan urlStatus)
 	start := time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC)

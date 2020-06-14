@@ -6,6 +6,7 @@ import (
 	"hltvdata/scraper"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,7 +35,7 @@ func UpdateHLTVURLS() time.Duration {
 		log.Fatal(err)
 	}
 	collection := client.Database("hltvdata").Collection("urls")
-	urls := scraper.RankingTraverseAsync()
+	urls := scraper.URLTraverseAsync()
 	_, error := collection.InsertOne(ctx, bson.M{
 		"urlList":    urls,
 		"timestamp":  time.Now(),
@@ -86,6 +87,7 @@ type HLTVRanking struct {
 
 // UpdateHLTVRankings lists off a range of rankings through time
 func UpdateHLTVRankings() bson.M {
+	const layoutUS = "January 2, 2006" // setup dateformatting
 	// Grab HLTVURLS
 	urlObj, _ := GetHLTVURLS()
 	c := make(chan []scraper.CSGOteam)
@@ -97,9 +99,19 @@ func UpdateHLTVRankings() bson.M {
 	}
 	HLTVRankingCollection := make([]HLTVRanking, urlCount)
 	for i, s := range urlObj.URLS {
+		urlSplitString := strings.Split(s, "/")
+		yearMonthDay := urlSplitString[len(urlSplitString)-3:]
+		year := yearMonthDay[0]
+		month := yearMonthDay[1]
+		day := yearMonthDay[2]
+		month = strings.Title(month)
+		timeOfRanking, err := time.Parse(layoutUS, fmt.Sprintf("%s %s, %s", month, day, year))
+		if err != nil {
+			log.Fatal(err)
+		}
 		HLTVRankingCollection[i] = HLTVRanking{
 			CSGOTeams: <-c, // exhaust the channel
-			Timestamp: time.Now(),
+			Timestamp: timeOfRanking,
 			URL:       s,
 		}
 	}

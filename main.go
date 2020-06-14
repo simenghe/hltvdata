@@ -3,7 +3,9 @@ package main
 import (
 	"hltvdata/plot"
 	"hltvdata/scraper"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,12 +27,8 @@ func main() {
 		teams := scraper.HltvTest()
 		c.JSON(http.StatusOK, teams)
 	})
-	r.GET("/test", func(c *gin.Context) {
-		go scraper.RankingTraverse()
-		c.JSON(http.StatusOK, "loss")
-	})
 	r.GET("/testasync", func(c *gin.Context) {
-		c.JSON(http.StatusOK, scraper.RankingTraverseAsync())
+		c.JSON(http.StatusOK, scraper.URLTraverseAsync())
 	})
 	// Adds a document, with new hltv urls
 	r.GET("/updatehltvurls", func(c *gin.Context) {
@@ -60,6 +58,11 @@ func main() {
 			"Imagining": "Loss",
 		})
 	})
-	const PORT = ":5000"
-	r.Run(PORT)
+	var PORT string
+	PORT = os.Getenv("PORT")
+	if PORT == "" {
+		PORT = "5000"
+		log.Printf("Defaulting Port")
+	}
+	r.Run(":" + PORT)
 }
