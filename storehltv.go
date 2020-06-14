@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -48,18 +47,9 @@ func UpdateHLTVURLS() time.Duration {
 	return time.Since(bench)
 }
 
-// URLStruct get the urldata
-type URLStruct struct {
-	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	URLS       []string           `bson:"urlList,omitempty"`
-	TimeStamp  time.Time          `bson:"timestamp,omitempty"`
-	ListLength int                `bson:"listLength,omitempty"`
-}
-
 // GetHLTVURLS returns the url list from database
 func GetHLTVURLS() (URLStruct, time.Duration) {
 	bench := time.Now()
-	// URLStruct struct of urllist
 	var urlObj URLStruct
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
@@ -137,4 +127,38 @@ func UpdateHLTVRankings() bson.M {
 		log.Fatal(err)
 	}
 	return HLTVcollection
+}
+
+// GetHLTVRankings grabs the latest collection from mongo.
+func GetHLTVRankings() bson.M {
+	var rankCollection RankingStruct
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(
+		URI,
+	))
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		log.Fatal(err)
+	}
+	collection := client.Database("hltvdata").Collection("rankings")
+
+	// Options to setup the query to save the latest one
+	opts := options.FindOne()
+	opts.SetSort(bson.D{{"timestamp", -1}})
+	error := collection.FindOne(ctx, bson.M{}, opts).Decode(&rankCollection)
+	returnObject := bson.M{
+		"ID":         rankCollection.ID,
+		"timestamp":  rankCollection.TimeStamp,
+		"urlcount":   rankCollection.URLCount,
+		"collection": rankCollection.Collection,
+	}
+	if error != nil {
+		log.Fatal(err)
+	}
+	// Return the time taken to run this operation.
+	return returnObject
 }

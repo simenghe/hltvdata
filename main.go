@@ -49,8 +49,10 @@ func main() {
 		})
 	})
 	r.GET("/updatehltvrankings", func(c *gin.Context) {
-
 		c.JSON(http.StatusOK, UpdateHLTVRankings())
+	})
+	r.GET("/gethltvrankings", func(c *gin.Context) {
+		c.JSON(http.StatusOK, GetHLTVRankings())
 	})
 	r.GET("/plot", func(c *gin.Context) {
 		plot.TestPlot()
